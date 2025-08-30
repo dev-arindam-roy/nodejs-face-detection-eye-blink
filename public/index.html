@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Face Gestures — MediaPipe FaceMesh</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1720; --panel:#0b1220; --accent:#6ee7b7; --muted:#99a1ad;
+      --card:#0b1220; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body { height:100%; margin:0; background:linear-gradient(180deg,#051018 0%, #071826 100%); color:#dbe7ef; }
+    .app { display:flex; gap:18px; padding:20px; height:100vh; box-sizing:border-box; }
+    .left, .right { background:var(--panel); border-radius:12px; padding:14px; box-shadow: 0 8px 30px rgba(2,6,23,0.6); }
+    .left { flex: 0 0 720px; display:flex; flex-direction:column; gap:12px; }
+    video { border-radius:10px; width:640px; height:480px; background:#000; }
+    canvas.overlay { position:absolute; left:10px; top:10px; pointer-events:none; }
+    .videoWrap { position:relative; width:640px; height:480px; }
+    .controls { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+    .control { background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; font-size:13px; color:var(--muted); }
+    label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    input[type=range] { width:100%; }
+    .right { flex:1; display:flex; flex-direction:column; gap:12px; min-width:320px; }
+    .card { background:var(--card); padding:12px; border-radius:10px; }
+    .stats { display:flex; gap:12px; }
+    .stat { flex:1; padding:10px; border-radius:8px; background:rgba(255,255,255,0.02); text-align:center; }
+    .stat h2 { margin:0; font-size:20px; color:var(--accent); }
+    .timeline { max-height:320px; overflow:auto; margin-top:8px; font-family:monospace; font-size:13px; color:#cfe9df; }
+    button { background:var(--accent); color:#042027; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .small { font-size:12px; color:var(--muted); }
+    .footer { margin-top:auto; font-size:12px; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="left">
+      <div class="videoWrap card">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay" class="overlay"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="control">
+          <label>EAR Threshold (eye closed) <span id="earVal" class="small"></span></label>
+          <input id="ear" type="range" min="0.10" max="0.35" step="0.01" value="0.22">
+        </div>
+        <div class="control">
+          <label>MAR Threshold (mouth open) <span id="marVal" class="small"></span></label>
+          <input id="mar" type="range" min="0.25" max="0.85" step="0.01" value="0.55">
+        </div>
+
+        <div class="control">
+          <label>Smoothing window (frames) <span id="smoothVal" class="small"></span></label>
+          <input id="smooth" type="range" min="1" max="12" step="1" value="6">
+        </div>
+
+        <div class="control">
+          <label>Blink debounce frames <span id="debounceVal" class="small"></span></label>
+          <input id="debounce" type="range" min="1" max="8" step="1" value="2">
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0">Live Metrics</h3>
+          <div class="small">Status: <span id="status">loading...</span></div>
+        </div>
+
+        <div class="stats" style="margin-top:12px;">
+          <div class="stat">
+            <div class="small">Blinks</div>
+            <h2 id="blinkCount">0</h2>
+            <div class="small">rate: <span id="blinkRate">0</span>/min</div>
+          </div>
+          <div class="stat">
+            <div class="small">Mouth Opens</div>
+            <h2 id="mouthCount">0</h2>
+            <div class="small">open now: <span id="mouthNow">no</span></div>
+          </div>
+          <div class="stat">
+            <div class="small">Head Yaw</div>
+            <h2 id="yawDeg">0°</h2>
+            <div class="small">turn: <span id="turnDir">center</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 8px 0;">Event Timeline</h4>
+        <div id="timeline" class="timeline"></div>
+      </div>
+
+      <div class="card footer">
+        <div>Using <strong>MediaPipe FaceMesh (468 landmarks)</strong> for higher accuracy.</div>
+        <div class="small">Tip: Adjust EAR/MAR & smoothing sliders to reduce false positives.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.IO client (CDN) -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+  <!-- MediaPipe FaceMesh + Camera utils (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
